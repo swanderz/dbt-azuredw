@@ -1,9 +1,9 @@
 from dbt.adapters.sql import SQLAdapter
-from dbt.adapters.mssql import MSSQLConnectionManager
+from dbt.adapters.azuredw import AzureDWConnectionManager
 
 
-class MSSQLAdapter(SQLAdapter):
-    ConnectionManager = MSSQLConnectionManager
+class AzureDWAdapter(SQLAdapter):
+    ConnectionManager = AzureDWConnectionManager
 
     @classmethod
     def date_function(cls):

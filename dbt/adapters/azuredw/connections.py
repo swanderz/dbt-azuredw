@@ -5,13 +5,12 @@ import time
 
 import dbt.compat
 import dbt.exceptions
-from dbt.contracts.connection import Connection
 from dbt.adapters.base import Credentials
 from dbt.adapters.sql import SQLConnectionManager
 
 from dbt.logger import GLOBAL_LOGGER as logger
 
-MSSQL_CREDENTIALS_CONTRACT = {
+AZUREDW_CREDENTIALS_CONTRACT = {
     'type': 'object',
     'additionalProperties': False,
     'properties': {
@@ -41,8 +40,8 @@ MSSQL_CREDENTIALS_CONTRACT = {
 }
 
 
-class MSSQLCredentials(Credentials):
-    SCHEMA = MSSQL_CREDENTIALS_CONTRACT
+class AzureDWCredentials(Credentials):
+    SCHEMA = AZUREDW_CREDENTIALS_CONTRACT;
     ALIASES = {
         'user': 'UID'
         , 'username': 'UID'
@@ -54,7 +53,7 @@ class MSSQLCredentials(Credentials):
 
     @property
     def type(self):
-        return 'mssql'
+        return 'azuredw'
 
     def _connection_keys(self):
         # return an iterator of keys to pretty-print in 'dbt debug'
@@ -62,8 +61,8 @@ class MSSQLCredentials(Credentials):
         return ('server', 'database', 'schema', 'UID')
 
 
-class MSSQLConnectionManager(SQLConnectionManager):
-    TYPE = 'mssql'
+class AzureDWConnectionManager(SQLConnectionManager):
+    TYPE = 'azuredw'
 
     @contextmanager
     def exception_handler(self, sql):
@@ -193,59 +192,3 @@ class MSSQLConnectionManager(SQLConnectionManager):
     def add_commit_query(self):
         pass
         # return self.add_query('COMMIT', auto_begin=False)
-
-    def begin(self):
-        connection = self.get_thread_connection()
-
-        if dbt.flags.STRICT_MODE:
-            assert isinstance(connection, Connection)
-
-        if connection.transaction_open is True:
-            raise dbt.exceptions.InternalException(
-                'Tried to begin a new transaction on connection "{}", but '
-                'it already had one open!'.format(connection.get('name')))
-
-        self.add_begin_query()
-
-        connection.transaction_open = True
-        return connection
-
-    def commit(self):
-        connection = self.get_thread_connection()
-        if dbt.flags.STRICT_MODE:
-            assert isinstance(connection, Connection)
-
-        if connection.transaction_open is False:
-            raise dbt.exceptions.InternalException(
-                'Tried to commit transaction on connection "{}", but '
-                'it does not have one open!'.format(connection.name))
-
-        logger.debug('On {}: COMMIT'.format(connection.name))
-        self.add_commit_query()
-
-        connection.transaction_open = False
-
-        return connection
-
-    @classmethod
-    def process_results(cls, column_names, rows):
-        return [dict(zip(column_names, row)) for row in rows]
-
-    @classmethod
-    def get_result_from_cursor(cls, cursor):
-        data = []
-        column_names = []
-
-        if cursor.description is not None:
-            column_names = [col[0] for col in cursor.description]
-
-            seen = 0
-            for i in range(0, len(column_names)):
-                if column_names[i] == '':
-                    column_names[i] = f'unnamed_column-{seen}'
-                    seen = seen + 1
-
-            rows = cursor.fetchall()
-            data = cls.process_results(column_names, rows)
-
-        return dbt.clients.agate_helper.table_from_data(data, column_names)
