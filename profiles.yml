@@ -1,0 +1,12 @@
+jaffle_shop:
+  target: dev
+  outputs:
+    dev:
+      type: azuredw
+      server: <your_server>.database.windows.net
+      schema: test
+      username: <your_username>
+      password: <your_password>
+      port: 1433
+      authentication: ActiveDirectoryPassword
+      database: <your_database>

@@ -32,11 +32,12 @@ AZUREDW_CREDENTIALS_CONTRACT = {
         'PWD': {
             'type': 'string',
         },
-        'windows_login': {
-            'type': 'boolean'
+        'authentication': {
+            'type': 'string',
+            'enum': ['ActiveDirectoryIntegrated','ActiveDirectoryMSI','ActiveDirectoryPassword','Sql','TrustedConnection']
         }
     },
-    'required': ['driver','host', 'database', 'schema'],
+    'required': ['driver','host', 'database', 'schema','authentication'],
 }
 
 
@@ -48,7 +49,6 @@ class AzureDWCredentials(Credentials):
         , 'pass': 'PWD'
         , 'password': 'PWD'
         , 'server': 'host'
-        , 'trusted_connection': 'windows_login'
     }
 
     @property
@@ -58,7 +58,7 @@ class AzureDWCredentials(Credentials):
     def _connection_keys(self):
         # return an iterator of keys to pretty-print in 'dbt debug'
         # raise NotImplementedError
-        return ('server', 'database', 'schema', 'UID')
+        return ('server', 'database', 'schema', 'UID', 'authentication',)
 
 
 class AzureDWConnectionManager(SQLConnectionManager):
@@ -132,21 +132,28 @@ class AzureDWConnectionManager(SQLConnectionManager):
             return connection
 
         credentials = connection.credentials
+        
 
+        MASKED_PWD=credentials.PWD[0] + ("*" * len(credentials.PWD))[:-2] + credentials.PWD[-1]
         try:
             con_str = []
             con_str.append(f"DRIVER={{{credentials.driver}}}")
             con_str.append(f"SERVER={credentials.host}")
             con_str.append(f"Database={credentials.database}")
 
-            if credentials.windows_login == False:
+            if credentials.authentication == 'TrustedConnection':
+                con_str.append("trusted_connection=yes")
+            else:
+                con_str.append(f"AUTHENTICATION={credentials.authentication}")
                 con_str.append(f"UID={credentials.UID}")
                 con_str.append(f"PWD={credentials.PWD}")
-            else:
-                con_str.append(f"trusted_connection=yes")
 
             con_str_concat = ';'.join(con_str)
-            logger.debug(f'Using connection string: {con_str_concat}')
+            con_str[-1] = f"PWD={MASKED_PWD}"
+            con_str_masked = ';'.join(con_str)
+
+            logger.debug(f'Using connection string: {con_str_masked}')
+            del con_str
 
             handle = pyodbc.connect(con_str_concat, autocommit=True)
 
