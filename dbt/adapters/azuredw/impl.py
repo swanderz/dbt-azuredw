@@ -11,4 +11,4 @@ class AzureDWAdapter(SQLAdapter):
 
     @classmethod
     def convert_text_type(cls, agate_table, col_idx):
-        return 'varchar(max)'
+        return 'varchar(8000)'
