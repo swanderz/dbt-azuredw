@@ -202,16 +202,17 @@ class AzureDWConnectionManager(SQLConnectionManager):
         # return self.add_query('COMMIT', auto_begin=False)
 
     @classmethod
-    def process_results(cls, column_names, rows):
-        return [dict(zip(column_names, row)) for row in rows]
-
-    @classmethod
     def get_result_from_cursor(cls, cursor):
         data = []
         column_names = []
 
         if cursor.description is not None:
             column_names = [col[0] for col in cursor.description]
+            ## azure likes to give us empty string column names for scalar queries
+            for i, col in enumerate(column_names):
+                if col == '':
+                    column_names[i] = f'Column{i+1}'
+                    logger.debug(f'substituted empty column name in position {i} with `Column{i+1}`') 
             rows = cursor.fetchall()
             data = cls.process_results(column_names, rows)
         try:
