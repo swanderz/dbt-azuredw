@@ -31,6 +31,25 @@ docker run -v $(PWD):/dbt_development/plugins -it dbt-azure-dw /bin/bash
 
 you can then jump into `jaffle_shop (mssql)` and work on making it run against your ADW!  
 
+
+**Sample profiles.yml**
+
+```yaml
+
+default:	
+  target: dev	
+  outputs:	
+    dev:	
+      type: azuredw	
+      driver: 'ODBC Driver 17 for SQL Server'	
+      host: account.database.windows.net	
+      database: dbt_test	
+      schema: foo	
+      username: dbt_user	
+      password: super_secret_dbt_password
+      authentication: ActiveDirectoryPassword   
+```
+
 ## Jaffle Shop
 
 Fishtown Analytic's [jaffle shop](https://github.com/fishtown-analytics/jaffle_shop) package is currently unsupported by this adapter. At the time of this writing, jaffle shop uses the `using()` join, and `group by [ordinal]` notation which is not supported in T-SQL. An alternative version has been forked by the author of dbt-mssql [here](https://github.com/jacobm001/jaffle_shop_mssql).
