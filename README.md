@@ -6,38 +6,30 @@ dbt-azuredw is currently in a beta release.
 
 ## Connecting to Azure SQL Data Warehouse
 
-Your user profile (located in `~/.dbt/profile`) will need an appropriate entry for your package. 
+## building your `profiles.yml`
+Use the profiles.yml file included as a guide, updating with your creds. You can find all the creds you need under _Home > dbname (account/dbname) - Connection strings_ in Azure, along with the username and password for authentication. 
 
-Required parameters are:
+## Getting Started
+1. Run this to keep your profiles.yml from tracking:
 
-- driver
-- host
-- database
-- schema
-- one of the login options:
-  - SQL Data Warehouse authentication
-    - username
-    - password
-  - Windows Login
-    - windows_login: true
-
-**Example profile:**
-
-The example below configures a seperate dev and prod environment for the package, _foo_. You will likely need to alter the `driver` variable to match whatever is installed on your system. In this example, I'm using version 17, which is the newest on my system. If you have something else on your system, it should work as well.
-
-```yaml
-foo:
-  target: dev
-  outputs:
-    dev:
-      type: azuredw
-      driver: 'ODBC Driver 17 for SQL Server'
-      host: account.database.windows.net
-      database: dbt_test
-      schema: foo
-      username: dbt_user
-      password: super_secret_dbt_password
+``` 
+git update-index --skip-worktree profiles.yml
 ```
+
+2. Update profiles.yml with your actual Azure Data Warehouse creds.
+3. Build the docker image. From the repo root:
+
+```
+docker build . -t dbt-azure-dw
+```
+
+4. Run a bash shell in the container:
+
+```
+docker run -v $(PWD):/dbt_development/plugins -it dbt-azure-dw /bin/bash
+```
+
+you can then jump into `jaffle_shop (mssql)` and work on making it run against your ADW!  
 
 ## Jaffle Shop
 
