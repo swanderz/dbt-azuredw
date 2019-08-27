@@ -50,6 +50,12 @@ default:
       authentication: ActiveDirectoryPassword   
 ```
 
+## Known Issues
+- At this time dbt-azuredw supports only `table`, `view` and `incremental` materializations (no `ephemeral`)
+- Only top-level (model) CTEs are supported, ie CTEs in macros are not supported (this is a sqlserver thing)
+
+
+
 ## Jaffle Shop
 
 Fishtown Analytic's [jaffle shop](https://github.com/fishtown-analytics/jaffle_shop) package is currently unsupported by this adapter. At the time of this writing, jaffle shop uses the `using()` join, and `group by [ordinal]` notation which is not supported in T-SQL. An alternative version has been forked by the author of dbt-mssql [here](https://github.com/jacobm001/jaffle_shop_mssql).
