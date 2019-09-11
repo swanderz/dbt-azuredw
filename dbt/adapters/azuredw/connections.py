@@ -34,7 +34,7 @@ AZUREDW_CREDENTIALS_CONTRACT = {
         },
         'authentication': {
             'type': 'string',
-            'enum': ['ActiveDirectoryIntegrated','ActiveDirectoryMSI','ActiveDirectoryPassword','Sql','TrustedConnection']
+            'enum': ['ActiveDirectoryIntegrated','ActiveDirectoryMSI','ActiveDirectoryPassword','SqlPassword','TrustedConnection']
         }
     },
     'required': ['driver','host', 'database', 'schema','authentication'],
@@ -222,3 +222,7 @@ class AzureDWConnectionManager(SQLConnectionManager):
             logger.debug(f'Failure with data: {data}')
             logger.debug(f'Failure with column_names: {column_names}')
             raise e
+
+    @classmethod
+    def process_results(cls, column_names, rows):
+        return [dict(zip(column_names, row)) for row in rows]
